@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  plexadmin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: plexadmin
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=PlexAdminDb;User=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;MultipleActiveResultSets=true
+    depends_on:
+      - sqlserver
+    networks:
+      - plexadmin-network
+    restart: unless-stopped
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: plexadmin-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong@Passw0rd
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    networks:
+      - plexadmin-network
+    restart: unless-stopped
+
+networks:
+  plexadmin-network:
+    driver: bridge
+
+volumes:
+  sqlserver-data:
