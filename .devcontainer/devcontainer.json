@@ -1,0 +1,46 @@
+{
+  "name": "PlexAdmin (.NET 9 + SQL Server)",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/PlexAdmin",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.csharp",
+        "ms-dotnettools.csdevkit",
+        "ms-dotnettools.blazor-webassembly-debugger",
+        "ms-mssql.mssql",
+        "ms-vscode.vscode-json",
+        "bradlc.vscode-tailwindcss",
+        "formulahendry.auto-rename-tag",
+        "ms-vscode.powershell"
+      ],
+      "settings": {
+        "dotnet.server.useOmnisharp": false,
+        "dotnet.completion.showCompletionItemsFromUnimportedNamespaces": true
+      }
+    }
+  },
+
+  "forwardPorts": [5000, 5001, 1433],
+  "portsAttributes": {
+    "5000": {
+      "label": "HTTP",
+      "protocol": "http"
+    },
+    "5001": {
+      "label": "HTTPS",
+      "protocol": "https"
+    },
+    "1433": {
+      "label": "SQL Server",
+      "protocol": "tcp"
+    }
+  },
+
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "postStartCommand": "bash .devcontainer/post-start.sh",
+
+  "remoteUser": "vscode"
+}
