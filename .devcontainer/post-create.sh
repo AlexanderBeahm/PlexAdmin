@@ -22,4 +22,53 @@ if ! dotnet ef --version > /dev/null 2>&1; then
     export PATH="$PATH:/home/vscode/.dotnet/tools"
 fi
 
+# Install Claude CLI as vscode user to avoid permission issues
+echo "Installing Claude CLI..."
+
+# First, ensure the vscode user exists and has a home directory
+if ! id -u vscode >/dev/null 2>&1; then
+    echo "⚠ vscode user not found, creating..."
+    useradd -m -s /bin/bash vscode
+fi
+
+# Set up npm and Claude CLI for vscode user with proper environment
+sudo -u vscode -i bash << 'EOF'
+# Set up environment
+export HOME=/home/vscode
+cd $HOME
+
+# Configure npm to use a local directory for global packages
+mkdir -p ~/.npm-global
+npm config set prefix '~/.npm-global'
+
+# Add npm global bin to PATH in .bashrc if not already there
+if ! grep -q "npm-global" ~/.bashrc; then
+    echo "" >> ~/.bashrc
+    echo "# NPM Global packages" >> ~/.bashrc
+    echo "export PATH=~/.npm-global/bin:\$PATH" >> ~/.bashrc
+fi
+
+# Set PATH for current session
+export PATH="~/.npm-global/bin:$PATH"
+export PATH="$HOME/.npm-global/bin:$PATH"
+
+# Install Claude CLI
+echo "Installing Claude CLI to ~/.npm-global..."
+npm install -g @anthropic-ai/claude-code
+
+# Create Claude configuration directory
+mkdir -p ~/.config/claude
+
+# Test Claude CLI installation
+echo "Testing Claude CLI installation..."
+if [ -f "$HOME/.npm-global/bin/claude" ]; then
+    echo "✓ Claude CLI binary found at ~/.npm-global/bin/claude"
+    $HOME/.npm-global/bin/claude --version
+else
+    echo "⚠ Claude CLI binary not found in expected location"
+    echo "Checking npm global bin directory:"
+    ls -la ~/.npm-global/bin/ || echo "Directory doesn't exist"
+fi
+EOF
+
 echo "✓ Creation script completed!"
