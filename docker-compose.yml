@@ -5,17 +5,33 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: build
     container_name: plexadmin
     ports:
       - "8080:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=PlexAdminDb;User=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;MultipleActiveResultSets=true
+      - ASPNETCORE_URLS=http://+:8080
     depends_on:
       - sqlserver
     networks:
       - plexadmin-network
     restart: unless-stopped
+    working_dir: /src/PlexAdmin
+    command: dotnet watch run --no-launch-profile --non-interactive
+    volumes:
+      - ./PlexAdmin:/src/PlexAdmin
+    develop:
+      watch:
+        - action: sync
+          path: ./PlexAdmin
+          target: /src/PlexAdmin
+          ignore:
+            - bin/
+            - obj/
+        - action: rebuild
+          path: ./PlexAdmin/PlexAdmin.csproj
 
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
