@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   plexadmin:
     build:
@@ -19,19 +17,19 @@ services:
       - plexadmin-network
     restart: unless-stopped
     working_dir: /src/PlexAdmin
-    command: dotnet watch run --no-launch-profile --non-interactive
+    command: dotnet watch run --project PlexAdmin.csproj --no-launch-profile --non-interactive
     volumes:
-      - ./PlexAdmin:/src/PlexAdmin
+      - ${localWorkspaceFolder}/PlexAdmin:/src/PlexAdmin
     develop:
       watch:
         - action: sync
-          path: ./PlexAdmin
+          path: ${localWorkspaceFolder}/PlexAdmin
           target: /src/PlexAdmin
           ignore:
             - bin/
             - obj/
         - action: rebuild
-          path: ./PlexAdmin/PlexAdmin.csproj
+          path: ${localWorkspaceFolder}/PlexAdmin/PlexAdmin.csproj
 
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest

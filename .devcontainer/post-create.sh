@@ -9,6 +9,11 @@ ssh-keyscan -t rsa,ecdsa,ed25519 github.com >> ~/.ssh/known_hosts
 # Change to the workspace directory
 cd /workspaces/PlexAdmin
 
+# Create .env file for docker-compose with the correct local workspace folder
+echo "Setting up docker-compose environment..."
+echo "localWorkspaceFolder=${localWorkspaceFolder}" > .env
+echo "✓ Created .env file with localWorkspaceFolder=${localWorkspaceFolder}"
+
 echo "Restoring .NET packages..."
 dotnet restore PlexAdmin/PlexAdmin.csproj
 

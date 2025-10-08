@@ -7,7 +7,6 @@
     "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
-    "ghcr.io/jlaundry/devcontainer-features/mssql-odbc-driver:1": {},
     "ghcr.io/nikiforovall/devcontainer-features/dotnet-csharpier:1": {},
     		"ghcr.io/devcontainers/features/node:1": {
 			"version": "lts"
@@ -39,7 +38,8 @@
 	"containerEnv": {
 		"SSH_AUTH_SOCK": "/ssh-agent",
 		// Accept GitHub's host key on first connect (modern OpenSSH hashes known_hosts):
-		"GIT_SSH_COMMAND": "ssh -o StrictHostKeyChecking=accept-new"
+		"GIT_SSH_COMMAND": "ssh -o StrictHostKeyChecking=accept-new",
+		"localWorkspaceFolder": "${localWorkspaceFolder}"
 	},
 	"remoteEnv": {
 		"SSH_AUTH_SOCK": "/ssh-agent"
