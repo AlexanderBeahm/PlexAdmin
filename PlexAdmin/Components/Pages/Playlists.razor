@@ -1,0 +1,196 @@
+@page "/playlists"
+@using PlexAdmin.Services
+@using PlexAdmin.Models
+@using Microsoft.JSInterop
+@inject IPlexService PlexService
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
+
+<PageTitle>Playlists</PageTitle>
+
+<h1>Plex Playlists</h1>
+
+@if (isLoading)
+{
+    <p><em>Loading playlists...</em></p>
+}
+else if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+else if (playlists == null || !playlists.Any())
+{
+    <p><em>No playlists found.</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-5">
+            <div class="mb-3">
+                <label class="form-label">Playlists:</label>
+                <div class="list-group playlist-container" style="max-height: 500px; overflow-y: auto;">
+                    @foreach (var playlist in playlists)
+                    {
+                        <a @onclick="() => SelectPlaylist(playlist)"
+                           class="list-group-item list-group-item-action @(selectedPlaylist?.Id == playlist.Id ? "active" : "")"
+                           style="cursor: pointer;">
+                            <span class="badge bg-secondary me-2">@playlist.Id</span>
+                            @playlist.Name
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            @if (selectedPlaylist != null)
+            {
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h4 class="mb-1">@selectedPlaylist.Name</h4>
+                            <p class="text-muted mb-0">Playlist ID: @selectedPlaylist.Id</p>
+                        </div>
+                        @if (playlistItems != null && playlistItems.Any())
+                        {
+                            <button class="btn btn-primary" @onclick="TriggerDownload">
+                                <i class="bi bi-download"></i> Export M3U
+                            </button>
+                        }
+                    </div>
+
+                    @if (isLoadingItems)
+                    {
+                        <p><em>Loading playlist items...</em></p>
+                    }
+                    else if (!string.IsNullOrEmpty(itemsErrorMessage))
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            @itemsErrorMessage
+                        </div>
+                    }
+                    else if (playlistItems == null || !playlistItems.Any())
+                    {
+                        <p><em>No items found in this playlist.</em></p>
+                    }
+                    else
+                    {
+                        <div class="table-responsive" style="max-height: 450px; overflow-y: auto;">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark sticky-top">
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Type</th>
+                                        <th>Year</th>
+                                        <th>Duration</th>
+                                        <th>Rating</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in playlistItems)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <strong>@item.Title</strong>
+                                                @if (!string.IsNullOrEmpty(item.Summary))
+                                                {
+                                                    <br />
+                                                    <small class="text-muted">@item.Summary</small>
+                                                }
+                                            </td>
+                                            <td>@item.Type</td>
+                                            <td>@(item.Year > 0 ? item.Year.ToString() : "-")</td>
+                                            <td>@item.Duration</td>
+                                            <td>@(item.Rating > 0 ? item.Rating.ToString("0.0") : "-")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    Select a playlist to view its contents
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private List<PlaylistDto>? playlists;
+    private bool isLoading = true;
+    private string? errorMessage;
+    private PlaylistDto? selectedPlaylist;
+    private List<PlaylistItemDto>? playlistItems;
+    private bool isLoadingItems = false;
+    private string? itemsErrorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            playlists = await PlexService.GetPlaylistsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading playlists: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SelectPlaylist(PlaylistDto playlist)
+    {
+        selectedPlaylist = playlist;
+        playlistItems = null;
+        itemsErrorMessage = null;
+        isLoadingItems = true;
+
+        try
+        {
+            playlistItems = await PlexService.GetPlaylistItemsAsync(playlist.Id);
+        }
+        catch (Exception ex)
+        {
+            itemsErrorMessage = $"Error loading playlist items: {ex.Message}";
+        }
+        finally
+        {
+            isLoadingItems = false;
+        }
+    }
+
+    private void TriggerDownload()
+    {
+        if (selectedPlaylist == null)
+        {
+            return;
+        }
+
+        try
+        {
+            var encodedName = Uri.EscapeDataString(selectedPlaylist.Name);
+            var url = $"/api/PlaylistExport/{selectedPlaylist.Id}?playlistName={encodedName}";
+
+            // Sanitize filename for download
+            var invalidChars = Path.GetInvalidFileNameChars();
+            var sanitizedName = string.Join("_", selectedPlaylist.Name.Split(invalidChars));
+            var filename = $"{sanitizedName}.m3u";
+
+            // Fire and forget - don't await
+            _ = JSRuntime.InvokeVoidAsync("triggerDownload", url, filename);
+        }
+        catch (Exception ex)
+        {
+            itemsErrorMessage = $"Error downloading file: {ex.Message}";
+        }
+    }
+}

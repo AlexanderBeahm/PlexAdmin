@@ -1,3 +1,6 @@
 PlexAdmin/bin*
 PlexAdmin/obj*
 .env
+.vs/*
+appsettings.Development.json
+appsettings.Production.json
