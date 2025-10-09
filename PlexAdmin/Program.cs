@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Server.Circuits;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PlexAdmin.Components;
@@ -11,8 +12,22 @@ using System.Net.Http.Headers;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddControllers();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+// Configure Blazor Server circuit options
+builder.Services.AddServerSideBlazor()
+    .AddCircuitOptions(options =>
+    {
+        options.DetailedErrors = true;
+        options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromMinutes(3);
+        options.DisconnectedCircuitMaxRetained = 100;
+        options.JSInteropDefaultCallTimeout = TimeSpan.FromMinutes(1);
+    });
+
+// Add circuit handler to manage connection lifecycle
+builder.Services.AddScoped<CircuitHandler, PlexAdmin.CircuitHandlers.FileDownloadCircuitHandler>();
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
@@ -61,6 +76,25 @@ builder.Services.AddScoped<IPlexService, PlexService>();
 
 var app = builder.Build();
 
+// Add global exception handling for diagnostics
+app.Use(async (context, next) =>
+{
+    var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+    logger.LogInformation("Request started: {Method} {Path}", context.Request.Method, context.Request.Path);
+
+    try
+    {
+        await next();
+        logger.LogInformation("Request completed: {Method} {Path} - Status: {StatusCode}",
+            context.Request.Method, context.Request.Path, context.Response.StatusCode);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Unhandled exception in request pipeline for {Path}", context.Request.Path);
+        throw; // Re-throw to let default handler deal with it
+    }
+});
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -79,6 +113,7 @@ app.UseHttpsRedirection();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
+app.MapControllers();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

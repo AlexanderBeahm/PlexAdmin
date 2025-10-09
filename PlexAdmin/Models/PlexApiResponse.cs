@@ -8,6 +8,12 @@ namespace PlexAdmin.Models
         public MediaContainer? MediaContainer { get; set; }
     }
 
+    public class PlexPlaylistItemsResponse
+    {
+        [JsonProperty("MediaContainer")]
+        public PlaylistItemsMediaContainer? MediaContainer { get; set; }
+    }
+
     public class MediaContainer
     {
         [JsonProperty("size")]
@@ -15,6 +21,36 @@ namespace PlexAdmin.Models
 
         [JsonProperty("Metadata")]
         public List<PlaylistMetadata>? Metadata { get; set; }
+    }
+
+    public class PlaylistItemsMediaContainer
+    {
+        [JsonProperty("size")]
+        public int Size { get; set; }
+
+        [JsonProperty("composite")]
+        public string? Composite { get; set; }
+
+        [JsonProperty("duration")]
+        public long Duration { get; set; }
+
+        [JsonProperty("leafCount")]
+        public int LeafCount { get; set; }
+
+        [JsonProperty("playlistType")]
+        public string? PlaylistType { get; set; }
+
+        [JsonProperty("ratingKey")]
+        public string? RatingKey { get; set; }
+
+        [JsonProperty("smart")]
+        public string? Smart { get; set; }
+
+        [JsonProperty("title")]
+        public string? Title { get; set; }
+
+        [JsonProperty("Metadata")]
+        public List<PlaylistItemMetadata>? Metadata { get; set; }
     }
 
     public class PlaylistMetadata
@@ -93,5 +129,114 @@ namespace PlexAdmin.Models
                 UpdatedAt = UpdatedAt
             };
         }
+    }
+
+    public class PlaylistItemMetadata
+    {
+        [JsonProperty("ratingKey")]
+        public string? RatingKey { get; set; }
+
+        [JsonProperty("key")]
+        public string? Key { get; set; }
+
+        [JsonProperty("guid")]
+        public string? Guid { get; set; }
+
+        [JsonProperty("type")]
+        public string? Type { get; set; }
+
+        [JsonProperty("title")]
+        public string? Title { get; set; }
+
+        [JsonProperty("summary")]
+        public string? Summary { get; set; }
+
+        [JsonProperty("year")]
+        public int Year { get; set; }
+
+        [JsonProperty("duration")]
+        public long Duration { get; set; }
+
+        [JsonProperty("rating")]
+        public double Rating { get; set; }
+
+        [JsonProperty("thumb")]
+        public string? Thumb { get; set; }
+
+        [JsonProperty("art")]
+        public string? Art { get; set; }
+
+        [JsonProperty("addedAt")]
+        public long AddedAt { get; set; }
+
+        [JsonProperty("updatedAt")]
+        public long UpdatedAt { get; set; }
+
+        [JsonProperty("index")]
+        public int Index { get; set; }
+
+        [JsonProperty("Media")]
+        public List<MediaInfo>? Media { get; set; }
+
+        public PlaylistItem ToPlaylistItem()
+        {
+            return new PlaylistItem
+            {
+                RatingKey = RatingKey ?? string.Empty,
+                Key = Key ?? string.Empty,
+                Guid = Guid ?? string.Empty,
+                Type = Type ?? string.Empty,
+                Title = Title ?? string.Empty,
+                Summary = Summary ?? string.Empty,
+                Year = Year,
+                Duration = Duration,
+                Rating = Rating,
+                Thumb = Thumb ?? string.Empty,
+                Art = Art ?? string.Empty,
+                AddedAt = AddedAt,
+                UpdatedAt = UpdatedAt,
+                Index = Index,
+                FilePath = Media?.FirstOrDefault()?.Part?.FirstOrDefault()?.File ?? string.Empty
+            };
+        }
+    }
+
+    public class MediaInfo
+    {
+        [JsonProperty("id")]
+        public int Id { get; set; }
+
+        [JsonProperty("duration")]
+        public long Duration { get; set; }
+
+        [JsonProperty("bitrate")]
+        public int Bitrate { get; set; }
+
+        [JsonProperty("container")]
+        public string? Container { get; set; }
+
+        [JsonProperty("Part")]
+        public List<PartInfo>? Part { get; set; }
+    }
+
+    public class PartInfo
+    {
+        [JsonProperty("id")]
+        public int Id { get; set; }
+
+        [JsonProperty("key")]
+        public string? Key { get; set; }
+
+        [JsonProperty("duration")]
+        public long Duration { get; set; }
+
+        [JsonProperty("file")]
+        public string? File { get; set; }
+
+        [JsonProperty("size")]
+        public long Size { get; set; }
+
+        [JsonProperty("container")]
+        public string? Container { get; set; }
     }
 }

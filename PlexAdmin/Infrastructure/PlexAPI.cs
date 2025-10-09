@@ -28,5 +28,23 @@ namespace PlexAdmin.Infrastructure
                 .Select(m => m.ToPlaylist())
                 .ToList();
         }
+
+        public async Task<IList<PlaylistItem>> GetPlaylistItems(string playlistId)
+        {
+            var response = await Client.GetAsync($"/playlists/{playlistId}/items");
+            response.EnsureSuccessStatusCode();
+
+            var content = await response.Content.ReadAsStringAsync();
+            var plexResponse = JsonConvert.DeserializeObject<PlexPlaylistItemsResponse>(content);
+
+            if (plexResponse?.MediaContainer?.Metadata == null)
+            {
+                return new List<PlaylistItem>();
+            }
+
+            return plexResponse.MediaContainer.Metadata
+                .Select(m => m.ToPlaylistItem())
+                .ToList();
+        }
     }
 }

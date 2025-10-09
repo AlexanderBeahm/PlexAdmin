@@ -4,7 +4,7 @@ namespace PlexAdmin.Infrastructure
 {
     public interface IPlexAPI
     {
-        public Task<IList<Playlist>> GetPlaylists();
-
+        Task<IList<Playlist>> GetPlaylists();
+        Task<IList<PlaylistItem>> GetPlaylistItems(string playlistId);
     }
 }
