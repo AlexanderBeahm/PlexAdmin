@@ -4,6 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using PlexAdmin.Components;
 using PlexAdmin.Components.Account;
 using PlexAdmin.Data;
+using PlexAdmin.Infrastructure;
+using PlexAdmin.Services;
+using System.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,6 +37,27 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
     .AddDefaultTokenProviders();
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+
+// Configure Plex API
+var plexToken = Environment.GetEnvironmentVariable("PLEX_TOKEN")
+    ?? builder.Configuration["Plex:Token"]
+    ?? throw new InvalidOperationException("Plex token not configured. Set PLEX_TOKEN environment variable or Plex:Token in appsettings.json");
+
+var plexUrl = Environment.GetEnvironmentVariable("PLEX_URL")
+    ?? builder.Configuration["Plex:Url"]
+    ?? "http://localhost:32400";
+
+// Parse Plex URL to extract components
+var uri = new Uri(plexUrl);
+
+// Set up HttpClient for Plex API, see https://github.com/LukeHagar/plexcsharp/issues/10 
+var client = new PlexHTTPClient(uri, plexToken);
+
+builder.Services.AddSingleton<IPlexAPI>(sp => new PlexAPI(
+    client: client
+));
+
+builder.Services.AddScoped<IPlexService, PlexService>();
 
 var app = builder.Build();
 
