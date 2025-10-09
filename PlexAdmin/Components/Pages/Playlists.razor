@@ -1,0 +1,60 @@
+@page "/playlists"
+@using PlexAdmin.Services
+@using PlexAdmin.Models
+@inject IPlexService PlexService
+@rendermode InteractiveServer
+
+<PageTitle>Playlists</PageTitle>
+
+<h1>Plex Playlists</h1>
+
+@if (isLoading)
+{
+    <p><em>Loading playlists...</em></p>
+}
+else if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+else if (playlists == null || !playlists.Any())
+{
+    <p><em>No playlists found.</em></p>
+}
+else
+{
+    <div class="mb-3">
+        <label for="playlistsTextbox" class="form-label">Playlists (ID - Name):</label>
+        <textarea class="form-control" id="playlistsTextbox" rows="15" readonly>@playlistsText</textarea>
+    </div>
+}
+
+@code {
+    private List<PlaylistDto>? playlists;
+    private bool isLoading = true;
+    private string? errorMessage;
+    private string playlistsText = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            playlists = await PlexService.GetPlaylistsAsync();
+
+            if (playlists != null && playlists.Any())
+            {
+                playlistsText = string.Join(Environment.NewLine,
+                    playlists.Select(p => $"{p.Id} - {p.Name}"));
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading playlists: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
