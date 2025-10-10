@@ -6,5 +6,6 @@ namespace PlexAdmin.Infrastructure
     {
         Task<IList<Playlist>> GetPlaylists();
         Task<IList<PlaylistItem>> GetPlaylistItems(string playlistId);
+        Task<IList<Server>> GetServers();
     }
 }

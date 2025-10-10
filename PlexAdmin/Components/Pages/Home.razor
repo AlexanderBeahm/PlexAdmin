@@ -1,7 +1,61 @@
 ﻿@page "/"
+@using PlexAdmin.Services
+@using PlexAdmin.Models
+@inject IPlexService PlexService
+@rendermode InteractiveServer
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1>PlexAdmin</h1>
 
-Welcome to your new app.
+<h2>An administrative webapp for management of Plex servers.</h2>
+
+<h3>Connected Servers</h3>
+
+@if (isLoading)
+{
+    <p><em>Loading servers...</em></p>
+}
+else if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+else if (servers == null || !servers.Any())
+{
+    <div class="alert alert-warning" role="alert">
+        No servers found.
+    </div>
+}
+else
+{
+    <ul>
+        @foreach (var server in servers)
+        {
+            <li><strong>@server.Name</strong> - @server.Address</li>
+        }
+    </ul>
+}
+
+@code {
+    private List<ServerDto>? servers;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            servers = await PlexService.GetServersAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading servers: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

@@ -239,4 +239,53 @@ namespace PlexAdmin.Models
         [JsonProperty("container")]
         public string? Container { get; set; }
     }
+
+    public class PlexServersResponse
+    {
+        [JsonProperty("MediaContainer")]
+        public ServersMediaContainer? MediaContainer { get; set; }
+    }
+
+    public class ServersMediaContainer
+    {
+        [JsonProperty("size")]
+        public int Size { get; set; }
+
+        [JsonProperty("Server")]
+        public List<ServerMetadata>? Server { get; set; }
+    }
+
+    public class ServerMetadata
+    {
+        [JsonProperty("name")]
+        public string? Name { get; set; }
+
+        [JsonProperty("host")]
+        public string? Host { get; set; }
+
+        [JsonProperty("address")]
+        public string? Address { get; set; }
+
+        [JsonProperty("port")]
+        public int Port { get; set; }
+
+        [JsonProperty("machineIdentifier")]
+        public string? MachineIdentifier { get; set; }
+
+        [JsonProperty("version")]
+        public string? Version { get; set; }
+
+        public Server ToServer()
+        {
+            return new Server
+            {
+                Name = Name ?? string.Empty,
+                Host = Host ?? string.Empty,
+                Address = Address ?? string.Empty,
+                Port = Port,
+                MachineIdentifier = MachineIdentifier ?? string.Empty,
+                Version = Version ?? string.Empty
+            };
+        }
+    }
 }

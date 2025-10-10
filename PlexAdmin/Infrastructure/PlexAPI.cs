@@ -46,5 +46,23 @@ namespace PlexAdmin.Infrastructure
                 .Select(m => m.ToPlaylistItem())
                 .ToList();
         }
+
+        public async Task<IList<Server>> GetServers()
+        {
+            var response = await Client.GetAsync("/servers");
+            response.EnsureSuccessStatusCode();
+
+            var content = await response.Content.ReadAsStringAsync();
+            var plexResponse = JsonConvert.DeserializeObject<PlexServersResponse>(content);
+
+            if (plexResponse?.MediaContainer?.Server == null)
+            {
+                return new List<Server>();
+            }
+
+            return plexResponse.MediaContainer.Server
+                .Select(s => s.ToServer())
+                .ToList();
+        }
     }
 }

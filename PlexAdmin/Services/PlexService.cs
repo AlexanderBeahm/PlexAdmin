@@ -12,6 +12,7 @@ namespace PlexAdmin.Services
             _plexApi = plexApi;
         }
 
+
         public async Task<List<PlaylistDto>> GetPlaylistsAsync()
         {
             try
@@ -90,6 +91,27 @@ namespace PlexAdmin.Services
             }
 
             return sb.ToString();
+        }
+
+        public async Task<List<ServerDto>> GetServersAsync()
+        {
+            try
+            {
+                var servers = await _plexApi.GetServers();
+
+                return servers
+                    .Select(s => new ServerDto
+                    {
+                        Name = s.Name,
+                        Address = s.Address
+                    })
+                    .ToList();
+            }
+            catch (Exception)
+            {
+                // Log exception in production
+                return new List<ServerDto>();
+            }
         }
     }
 }
