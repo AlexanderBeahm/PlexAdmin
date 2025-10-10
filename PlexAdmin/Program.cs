@@ -1,13 +1,10 @@
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Components.Server.Circuits;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PlexAdmin.Components;
-using PlexAdmin.Components.Account;
 using PlexAdmin.Data;
 using PlexAdmin.Infrastructure;
 using PlexAdmin.Services;
-using System.Net.Http.Headers;
 using BlazorDownloadFile;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,9 +24,6 @@ builder.Services.AddServerSideBlazor()
     });
 
 builder.Services.AddCascadingAuthenticationState();
-builder.Services.AddScoped<IdentityUserAccessor>();
-builder.Services.AddScoped<IdentityRedirectManager>();
-builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 
 builder.Services.AddAuthentication(options =>
     {
@@ -47,8 +41,6 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
-
-builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
 // Configure Plex API
 var plexToken = Environment.GetEnvironmentVariable("PLEX_TOKEN")
@@ -115,8 +107,5 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
-
-// Add additional endpoints required by the Identity /Account Razor components.
-app.MapAdditionalIdentityEndpoints();
 
 app.Run();
