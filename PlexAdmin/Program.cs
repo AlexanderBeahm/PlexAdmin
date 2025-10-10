@@ -8,11 +8,11 @@ using PlexAdmin.Data;
 using PlexAdmin.Infrastructure;
 using PlexAdmin.Services;
 using System.Net.Http.Headers;
+using BlazorDownloadFile;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
@@ -25,9 +25,6 @@ builder.Services.AddServerSideBlazor()
         options.DisconnectedCircuitMaxRetained = 100;
         options.JSInteropDefaultCallTimeout = TimeSpan.FromMinutes(1);
     });
-
-// Add circuit handler to manage connection lifecycle
-builder.Services.AddScoped<CircuitHandler, PlexAdmin.CircuitHandlers.FileDownloadCircuitHandler>();
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
@@ -74,6 +71,9 @@ builder.Services.AddSingleton<IPlexAPI>(sp => new PlexAPI(
 
 builder.Services.AddScoped<IPlexService, PlexService>();
 
+// Add BlazorDownloadFile service
+builder.Services.AddBlazorDownloadFile();
+
 var app = builder.Build();
 
 // Add global exception handling for diagnostics
@@ -113,7 +113,6 @@ app.UseHttpsRedirection();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
-app.MapControllers();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

@@ -1,9 +1,10 @@
 @page "/playlists"
 @using PlexAdmin.Services
 @using PlexAdmin.Models
-@using Microsoft.JSInterop
+@using BlazorDownloadFile
+@using System.Text
 @inject IPlexService PlexService
-@inject IJSRuntime JSRuntime
+@inject IBlazorDownloadFileService BlazorDownloadFileService
 @rendermode InteractiveServer
 
 <PageTitle>Playlists</PageTitle>
@@ -168,25 +169,37 @@ else
         }
     }
 
-    private void TriggerDownload()
+    private async Task TriggerDownload()
     {
-        if (selectedPlaylist == null)
+        if (selectedPlaylist == null || playlistItems == null)
         {
             return;
         }
 
         try
         {
-            var encodedName = Uri.EscapeDataString(selectedPlaylist.Name);
-            var url = $"/api/PlaylistExport/{selectedPlaylist.Id}?playlistName={encodedName}";
+            // Generate M3U content directly using the service
+            var m3uContent = PlexService.GenerateM3UContent(playlistItems, selectedPlaylist.Name);
+
+            // Convert to byte array
+            var bytes = Encoding.UTF8.GetBytes(m3uContent);
 
             // Sanitize filename for download
             var invalidChars = Path.GetInvalidFileNameChars();
             var sanitizedName = string.Join("_", selectedPlaylist.Name.Split(invalidChars));
             var filename = $"{sanitizedName}.m3u";
 
-            // Fire and forget - don't await
-            _ = JSRuntime.InvokeVoidAsync("triggerDownload", url, filename);
+            // Download file using BlazorDownloadFile
+            var result = await BlazorDownloadFileService.DownloadFile(
+                filename,
+                bytes,
+                CancellationToken.None,
+                "audio/x-mpegurl");
+
+            if (!result.Succeeded)
+            {
+                itemsErrorMessage = $"Error downloading file: {result.ErrorMessage}";
+            }
         }
         catch (Exception ex)
         {
